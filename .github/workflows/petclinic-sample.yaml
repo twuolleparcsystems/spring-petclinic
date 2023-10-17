@@ -93,14 +93,36 @@ jobs:
           port: ${{ env.APP_PORT }}
 
       # Push the built image to our image registry so it can be pulled into the OpenShift cluster.
-      - name: Push to Quay
-        id: push-to-quay
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build-image.outputs.image }}
-          tags: ${{ steps.build-image.outputs.tags }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_REGISTRY_NAMESPACE }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+      #- name: Push to Quay
+       # id: push-to-quay
+       # uses: redhat-actions/push-to-registry@v2
+       # with:
+        #  image: ${{ steps.build-image.outputs.image }}
+        #  tags: ${{ steps.build-image.outputs.tags }}
+         # registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_REGISTRY_NAMESPACE }}
+         # username: ${{ secrets.REGISTRY_USER }}
+          #password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v3
+        env:
+          # JFrog platform url (for example: https://acme.jfrog.io)
+          JF_URL: ${{ secrets.JF_URL }}
 
+          # JFrog Platform access token
+          #JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+
+          # Basic authentication credentials
+          JF_USER: ${{ secrets.JF_USER }}
+          JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+
+      - name: Run JFrog CLI
+        run: |
+          # Ping the server
+          jf rt ping
+          # Collect environment variables for the build
+          jf rt bce
+          # Collect VCS details from git and add them to the build
+          jf rt bag
+          # Publish build info
+          jf rt bp
       # For deploying to OpenShift, see https://github.com/redhat-actions/oc-new-app/blob/main/.github/workflows/example.yml
